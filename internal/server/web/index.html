@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>addipv6</title>
+<link rel="stylesheet" href="/style.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%230c7461'/%3E%3C/svg%3E">
+</head>
+<body>
+
+<svg xmlns="http://www.w3.org/2000/svg" class="sprite" aria-hidden="true">
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5v14"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M10 11v6"/><path d="M14 11v6"/></symbol>
+  <symbol id="i-cloud" viewBox="0 0 24 24"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></symbol>
+  <symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></symbol>
+  <symbol id="i-save" viewBox="0 0 24 24"><path d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/></symbol>
+  <symbol id="i-restore" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></symbol>
+  <symbol id="i-exit" viewBox="0 0 24 24"><path d="M7 17 17 7"/><path d="M7 7h10v10"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
+  <symbol id="i-key" viewBox="0 0 24 24"><path d="m15.5 7.5 3 3L22 7l-3-3"/><path d="m18.5 10.5-8 8a4.95 4.95 0 1 1-7-7l8-8a4.95 4.95 0 0 1 7 7Z"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></symbol>
+  <symbol id="i-dice" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M8 8h.01"/><path d="M16 8h.01"/><path d="M12 12h.01"/><path d="M8 16h.01"/><path d="M16 16h.01"/></symbol>
+</svg>
+
+<section id="login">
+  <form class="login-box" id="login-form">
+    <h1>addipv6</h1>
+    <p>批量管理 VPS 的 IPv6，顺手解析到 Cloudflare</p>
+    <label for="pw">密码</label>
+    <input id="pw" type="password" autocomplete="current-password" autofocus>
+    <button class="primary w-full" type="submit">进去</button>
+    <p id="login-err" class="note err-text hidden"></p>
+  </form>
+</section>
+
+<div id="app" class="hidden">
+  <header>
+    <div class="brand">addipv6<span id="ver"></span></div>
+    <div class="head-field">
+      <span>网卡</span>
+      <select id="iface"></select>
+    </div>
+    <div class="head-field">
+      <span>网段</span>
+      <select id="prefix" class="mono"></select>
+    </div>
+    <button class="ghost icon-only" id="reload" title="重新读一遍网卡">
+      <svg class="icon"><use href="#i-refresh"/></svg>
+    </button>
+    <div class="spacer"></div>
+    <span class="tag" id="platform"></span>
+    <button class="ghost icon-only" id="theme" title="换配色">
+      <svg class="icon"><use href="#i-moon"/></svg>
+    </button>
+    <button class="ghost icon-only" id="logout" title="退出">
+      <svg class="icon"><use href="#i-logout"/></svg>
+    </button>
+  </header>
+
+  <div id="demo-banner" class="banner warn hidden">
+    <svg class="icon"><use href="#i-alert"/></svg>
+    <span>当前不是 Linux，只能看界面，改不了真网卡。</span>
+  </div>
+
+  <main>
+    <section class="pane">
+      <div class="pane-head">
+        <h2>本机 IPv6</h2>
+        <span class="tag" id="addr-stat"></span>
+        <div class="spacer"></div>
+        <button class="ghost" id="persist" title="装个开机自启的恢复服务，重启后地址还在">
+          <svg class="icon"><use href="#i-save"/></svg>开机保持
+        </button>
+        <button class="ghost" id="restore" title="按记录把地址重新加回网卡">
+          <svg class="icon"><use href="#i-restore"/></svg>恢复
+        </button>
+      </div>
+      <div class="pane-body">
+        <div class="row">
+          <div class="field">
+            <span>生成</span>
+            <input id="count" type="number" min="1" max="1000" value="10" class="w-count">
+            <span>个</span>
+          </div>
+          <button class="primary" id="gen"><svg class="icon"><use href="#i-dice"/></svg>随机生成</button>
+          <label class="check"><input type="checkbox" id="auto-add">生成完直接加到网卡</label>
+        </div>
+
+        <div class="row">
+          <div class="seg">
+            <button id="sel-all" type="button">全选</button>
+            <button id="sel-mine" type="button">本工具加的</button>
+            <button id="sel-pending" type="button">待添加</button>
+            <button id="sel-none" type="button">清空勾选</button>
+          </div>
+          <div class="spacer"></div>
+          <button id="add-pending" disabled><svg class="icon"><use href="#i-plus"/></svg>加到网卡</button>
+          <button id="set-source" disabled title="把出站流量的源地址换成勾中的那个">
+            <svg class="icon"><use href="#i-exit"/></svg>设为出口
+          </button>
+          <button class="danger" id="del-addr" disabled><svg class="icon"><use href="#i-trash"/></svg>删掉勾的</button>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th class="check"><input type="checkbox" id="check-all-addr"></th>
+                <th>地址</th>
+                <th>状态</th>
+                <th class="col-narrow"></th>
+              </tr>
+            </thead>
+            <tbody id="addr-rows"></tbody>
+          </table>
+          <div class="empty" id="addr-empty">这块网卡上还没有全局 IPv6，先生成几个</div>
+        </div>
+        <div class="count-line" id="addr-count"></div>
+      </div>
+    </section>
+
+    <section class="pane">
+      <div class="pane-head">
+        <h2>Cloudflare</h2>
+        <span class="tag" id="cf-stat">未连接</span>
+        <div class="spacer"></div>
+        <button class="ghost" id="cf-reset" title="换一把 Token">
+          <svg class="icon"><use href="#i-key"/></svg>换 Token
+        </button>
+      </div>
+      <div class="pane-body">
+        <div class="stack-sm" id="cf-token-row">
+          <div class="row">
+            <div class="seg" id="cf-mode">
+              <button type="button" data-mode="token" aria-pressed="true">API Token</button>
+              <button type="button" data-mode="globalkey" aria-pressed="false">全局 Key</button>
+            </div>
+          </div>
+          <div class="row" id="cf-row-token">
+            <input id="cf-token" type="password" class="grow-wide" placeholder="粘贴 API Token">
+          </div>
+          <div class="row hidden" id="cf-row-key">
+            <input id="cf-email" type="text" class="grow-wide" placeholder="Cloudflare 登录邮箱" autocomplete="off">
+            <input id="cf-key" type="password" class="grow-wide" placeholder="Global API Key">
+          </div>
+          <div class="row">
+            <button class="primary" id="cf-save">存下来</button>
+            <p class="note" id="cf-mode-note"></p>
+          </div>
+        </div>
+
+        <div id="cf-main" class="stack hidden">
+          <div class="row">
+            <div class="field field-grow">
+              <span>站点</span>
+              <select id="cf-zone" class="grow"></select>
+            </div>
+            <button class="ghost icon-only" id="cf-reload-zones" title="重新拉站点">
+              <svg class="icon"><use href="#i-refresh"/></svg>
+            </button>
+          </div>
+
+          <div class="row">
+            <div class="field field-grow">
+              <span>记录名</span>
+              <input id="cf-name" type="text" class="mono grow" placeholder="node-{n}">
+            </div>
+            <div class="field">
+              <span>TTL</span>
+              <input id="cf-ttl" type="number" min="1" max="86400" value="60" class="w-ttl">
+            </div>
+            <label class="check"><input type="checkbox" id="cf-proxied">走 CF 代理</label>
+          </div>
+
+          <p class="note" id="cf-hint"></p>
+
+          <div class="row">
+            <button class="primary" id="cf-create" disabled>
+              <svg class="icon"><use href="#i-cloud"/></svg><span id="cf-create-label">解析勾中的地址</span>
+            </button>
+          </div>
+
+          <div class="row">
+            <div class="seg">
+              <button id="rec-all" type="button">全选</button>
+              <button id="rec-mine" type="button">本工具建的</button>
+              <button id="rec-none" type="button">清空勾选</button>
+            </div>
+            <div class="spacer"></div>
+            <button class="ghost icon-only" id="cf-reload-records" title="重新拉记录">
+              <svg class="icon"><use href="#i-refresh"/></svg>
+            </button>
+            <button class="danger" id="cf-delete" disabled><svg class="icon"><use href="#i-trash"/></svg>删掉勾的</button>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th class="check"><input type="checkbox" id="check-all-rec"></th>
+                  <th>名称</th>
+                  <th>指向</th>
+                  <th class="num">TTL</th>
+                  <th>标记</th>
+                </tr>
+              </thead>
+              <tbody id="rec-rows"></tbody>
+            </table>
+            <div class="empty" id="rec-empty">这个站点还没有 AAAA 记录</div>
+          </div>
+          <div class="count-line" id="rec-count"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <section class="console">
+    <div class="console-head">
+      <h2>运行日志</h2>
+      <div class="spacer"></div>
+      <button class="ghost icon-only" id="log-copy" title="复制日志"><svg class="icon"><use href="#i-copy"/></svg></button>
+      <button class="ghost icon-only" id="log-clear" title="清空"><svg class="icon"><use href="#i-x"/></svg></button>
+    </div>
+    <div class="console-body" id="log"></div>
+  </section>
+</div>
+
+<div id="toast"></div>
+
+<dialog id="confirm">
+  <div class="dlg-body">
+    <h3 id="dlg-title"></h3>
+    <p id="dlg-text"></p>
+    <div class="dlg-list hidden" id="dlg-list"></div>
+    <label class="check hidden mt-12" id="dlg-force-wrap">
+      <input type="checkbox" id="dlg-force">强制执行，我知道可能会断网
+    </label>
+  </div>
+  <div class="dlg-foot">
+    <button id="dlg-cancel">算了</button>
+    <button class="danger" id="dlg-ok">确认</button>
+  </div>
+</dialog>
+
+<script src="/app.js"></script>
+</body>
+</html>
