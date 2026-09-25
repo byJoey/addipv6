@@ -15,11 +15,20 @@ STATE_DIR=/var/lib/addipv6
 DEFAULT_PORT=8688
 
 R='\033[31m'; G='\033[32m'; Y='\033[33m'; B='\033[36m'; D='\033[2m'; N='\033[0m'
+
+# 下载用的临时目录。用全局变量配脚本级 trap，别用函数级 trap RETURN,
+# 那个会在 local 变量销毁之后才触发，set -u 下直接报未绑定。
+TMPDIR_DL=""
+cleanup() { [ -n "${TMPDIR_DL:-}" ] && rm -rf "$TMPDIR_DL"; TMPDIR_DL=""; return 0; }
+trap cleanup EXIT
 ok()   { printf "${G}✓${N} %s\n" "$*"; }
 warn() { printf "${Y}!${N} %s\n" "$*"; }
 err()  { printf "${R}✗${N} %s\n" "$*"; }
 info() { printf "  %s\n" "$*"; }
 hr()   { printf "${D}%s${N}\n" "────────────────────────────────────────"; }
+# 脚本经常是 bash <(curl ...) 跑起来的，这时候 $0 是 /dev/fd/63，
+# 给用户看没意义，所以提示里一律用能直接复制的完整命令。
+SELF="bash <(curl -fsSL https://raw.githubusercontent.com/${REPO}/main/install.sh)"
 
 need_root() {
   [ "$(id -u)" -eq 0 ] || { err "要用 root 跑，前面加个 sudo"; exit 1; }
@@ -80,9 +89,11 @@ EOF
 
 # 先从 Releases 拿预编译的；拿不到就退回本机用 Go 编译。
 fetch_binary() {
-  local arch tmp url
+  local arch url tmp
   arch=$(detect_arch) || { err "认不出这个 CPU 架构：$(uname -m)"; return 1; }
-  tmp=$(mktemp -d); trap 'rm -rf "$tmp"' RETURN
+  cleanup
+  TMPDIR_DL=$(mktemp -d)
+  tmp="$TMPDIR_DL"
   url="https://github.com/${REPO}/releases/latest/download/addipv6-linux-${arch}"
 
   info "架构 ${arch}，从 Releases 下载"
@@ -137,7 +148,7 @@ do_install() {
   show_access "$port"
   hr
   info "有防火墙记得放行 ${port}"
-  info "再次打开菜单： bash <(curl -fsSL https://raw.githubusercontent.com/${REPO}/main/install.sh)"
+  info "再次打开菜单： ${SELF}"
 }
 
 show_access() {
@@ -151,12 +162,19 @@ show_access() {
 do_update() {
   need_root; need_linux
   installed || { err "还没装过，先选安装"; return 1; }
-  local old; old=$($BIN version 2>/dev/null)
+  local old latest
+  old=$($BIN version 2>/dev/null | awk '{print $2}')
+  latest=$(curl -fsS --max-time 10 "https://api.github.com/repos/${REPO}/releases/latest" 2>/dev/null \
+           | grep -oE '"tag_name": *"[^"]+"' | cut -d'"' -f4)
+  if [ -n "$latest" ] && [ "$latest" = "$old" ]; then
+    ok "已经是最新的 $old，不用更新"
+    return 0
+  fi
+  [ -n "$latest" ] && info "$old  ->  $latest"
   fetch_binary || return 1
   systemctl restart addipv6 2>/dev/null
   sleep 1
-  ok "更新完成"
-  info "$old  ->  $($BIN version 2>/dev/null)"
+  ok "更新完成：$($BIN version 2>/dev/null)"
   info "地址记录和 Cloudflare 配置都没动"
 }
 
@@ -175,7 +193,7 @@ do_uninstall() {
     warn "已经加到网卡上的 IPv6 还在，重启后会自己消失"
   else
     info "配置还留着：$CONF_DIR 和 $STATE_DIR"
-    info "要一起清掉就跑：$0 uninstall purge"
+    info "要一起清掉就跑：${SELF} uninstall purge"
   fi
 }
 
@@ -304,6 +322,6 @@ case "${1:-}" in
     if [ -t 0 ]; then need_root; need_linux; menu; else do_install; fi
     ;;
   *) err "不认识的参数：$1"
-     info "用法：$0 [install|update|uninstall [purge]|status]"
+     info "用法：${SELF} [install|update|uninstall [purge]|status]"
      exit 1 ;;
 esac
